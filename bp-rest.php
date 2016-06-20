@@ -49,4 +49,4 @@ function bp_rest_api_endpoints() {
 		$controller->register_routes();
 	}
 }
-add_action( 'bp_rest_api_init', 'bp_rest_api_endpoints' );
+add_action( 'rest_api_init', 'bp_rest_api_endpoints' );
