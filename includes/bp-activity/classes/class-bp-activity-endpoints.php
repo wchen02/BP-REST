@@ -104,7 +104,8 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 					'context'     => array( 'view', 'edit' ),
 					'description' => __( 'The activity type of the object.', 'buddypress' ),
 					'type'        => 'string',
-					'enum'        => array_keys( bp_activity_get_types() ),
+					// disable because our site hacks to use unregistered types
+					//'enum'        => array_keys( bp_activity_get_types() ),
 				),
 
 				'title' => array(
@@ -242,7 +243,8 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 		$params['type'] = array(
 			'description'       => __( 'Limit result set to items with a specific activity type.', 'buddypress' ),
 			'type'              => 'string',
-			'enum'              => array_keys( bp_activity_get_types() ),
+			// disable because our site hacks to use unregistered types
+			//'enum'              => array_keys( bp_activity_get_types() ),
 			'sanitize_callback' => 'sanitize_key',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
@@ -251,6 +253,15 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 			'description'       => __( 'Limit result set to items that match this search query.', 'buddypress' ),
 			'default'           => '',
 			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'validate_callback' => 'rest_validate_request_arg',
+		);
+
+		$params['scope'] = array(
+			'description'       => __( 'Filter by scope.', 'buddypress' ),
+			'default'           => 'just-me',
+			'type'              => 'string',
+			'enum'				=> array('just-me', 'friends', 'group'),
 			'sanitize_callback' => 'sanitize_text_field',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
@@ -278,6 +289,7 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 			'sort'              => $request['order'],
 			'spam'              => $request['status'] === 'spam' ? 'spam_only' : 'ham_only',
 			'user_id'           => $request['author'],
+			'scope'				=> $request['scope'],
 
 			// Set optimised defaults.
 			'count_total'       => true,
@@ -285,7 +297,6 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 			'show_hidden'       => false,
 			'update_meta_cache' => true,
 		);
-
 		if ( isset( $request['after'] ) ) {
 			$args['since'] = $request['after'];
 		}
@@ -321,6 +332,20 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 			$args['show_hidden'] = true;
 		}
 
+		if (isset($args['user_id'])) {
+			if (!isset($args['filter'])) {
+				$args['filter'] = array();
+			}
+			$args['filter']['user_id'] = $args['user_id'];
+		}
+		
+		if (isset($args['primary_id'])) {
+			if (!isset($args['filter'])) {
+				$args['filter'] = array();
+			}
+			$args['filter']['primary_id'] = $args['primary_id'];
+		}
+		
 
 		$retval     = array();
 		$activities = bp_activity_get( $args );
