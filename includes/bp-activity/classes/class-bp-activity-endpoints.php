@@ -418,7 +418,9 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 	 */
 	public function prepare_item_for_response( $activity, $request, $is_raw = false ) {
 		$data = array(
-			'author'                => $activity->user_id,
+			'author_id'             => $activity->user_id,
+			'author_name'           => $activity->display_name,
+			'avatar_url'            => bp_core_fetch_avatar('html=false&item_id=' . $activity->user_id),
 			'component'             => $activity->component,
 			'content'               => $activity->content,
 			'date'                  => $this->prepare_date_response( $activity->date_recorded ),
