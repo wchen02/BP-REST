@@ -31,6 +31,12 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 				'permission_callback' => array( $this, 'get_items_permissions_check' ),
 				'args'                => $this->get_collection_params(),
 			),
+			array(
+				'methods'         => WP_REST_Server::CREATABLE,
+				'callback'        => array( $this, 'create_item' ),
+				'permission_callback' => array( $this, 'create_item_permissions_check' ),
+				'args'            => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+			),
 			'schema' => array( $this, 'get_public_item_schema' ),
 		) );
 
@@ -407,6 +413,33 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 	}
 
 	/**
+	 * Check if a given request has access create users
+	 *
+	 * @param  WP_REST_Request $request Full details about the request.
+	 * @return boolean
+	 */
+	public function create_item_permissions_check( $request ) {
+		/*if ( ! current_user_can( 'create_users' ) ) {
+			return new WP_Error( 'rest_cannot_create_user', __( 'Sorry, you are not allowed to create resource.' ), array( 'status' => rest_authorization_required_code() ) );
+		}*/
+		return true;
+	}
+
+	/**
+	 * Create a single user
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public function create_item( $request ) {
+		if ( ! empty( $request['id'] ) ) {
+			return new WP_Error( 'rest_user_exists', __( 'Cannot create existing resource.' ), array( 'status' => 400 ) );
+		}
+
+		$activity = $this->prepare_item_for_database( $request );
+	}
+
+	/**
 	 * Prepares activity data for return as an object.
 	 *
 	 * @since 0.1.0
@@ -448,6 +481,70 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 		 * @param WP_REST_Request $request Request used to generate the response.
 		 */
 		return apply_filters( 'rest_prepare_buddypress_activity_value', $response, $request );
+	}
+
+	/**
+	 * Prepare a single activity for create or update
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return object $prepared_activity Activity object.
+	 */
+	protected function prepare_item_for_database( $request ) {
+		$prepared_activity = new stdClass;
+		$schema = $this->get_item_schema();
+		
+		// required arguments.
+		if ( isset( $request['user_id'] ) && ! empty( $schema['properties']['user_id'] ) ) {
+			$prepared_activity->user_id = $request['user_id'];
+		}
+		if ( isset( $request['component'] ) && ! empty( $schema['properties']['component'] ) ) {
+			$prepared_activity->component = $request['component'];
+		}
+		if ( isset( $request['type'] ) && ! empty( $schema['properties']['type'] ) ) {
+			$prepared_activity->type = $request['type'];
+		}
+		if ( isset( $request['action'] ) && ! empty( $schema['properties']['action'] ) ) {
+			$prepared_activity->action = $request['action'];
+		}
+		if ( isset( $request['content'] ) && ! empty( $schema['properties']['content'] ) ) {
+			$prepared_activity->content = $request['content'];
+		}
+		if ( isset( $request['primary_link'] ) && ! empty( $schema['properties']['primary_link'] ) ) {
+			$prepared_activity->primary_link = $request['primary_link'];
+		}
+		if ( isset( $request['item_id'] ) && ! empty( $schema['properties']['item_id'] ) ) {
+			$prepared_activity->item_id = $request['item_id'];
+		}
+		if ( isset( $request['secondary_item_id'] ) && ! empty( $schema['properties']['secondary_item_id'] ) ) {
+			$prepared_activity->secondary_item_id = $request['secondary_item_id'];
+		}
+		if ( isset( $request['date_recorded'] ) && ! empty( $schema['properties']['date_recorded'] ) ) {
+			$prepared_activity->date_recorded = $request['date_recorded'];
+		}
+		if ( isset( $request['hide_sitewide'] ) && ! empty( $schema['properties']['hide_sitewide'] ) ) {
+			$prepared_activity->hide_sitewide = $request['hide_sitewide'];
+		}
+		if ( isset( $request['mptt_left'] ) && ! empty( $schema['properties']['mptt_left'] ) ) {
+			$prepared_activity->mptt_left = $request['mptt_left'];
+		}
+		if ( isset( $request['mptt_right'] ) && ! empty( $schema['properties']['mptt_right'] ) ) {
+			$prepared_activity->mptt_right = $request['mptt_right'];
+		}
+		if ( isset( $request['is_spam'] ) && ! empty( $schema['properties']['is_spam'] ) ) {
+			$prepared_activity->is_spam = $request['is_spam'];
+		}
+		if ( isset( $request['privacy'] ) && ! empty( $schema['properties']['privacy'] ) ) {
+			$prepared_activity->privacy = $request['privacy'];
+		}
+
+
+		/**
+		 * Filter user data before inserting user via the REST API.
+		 *
+		 * @param object          $prepared_activity User object.
+		 * @param WP_REST_Request $request       Request object.
+		 */
+		return apply_filters( 'rest_pre_insert_activity', $prepared_activity, $request );
 	}
 
 	/**
