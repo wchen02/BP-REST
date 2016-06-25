@@ -431,7 +431,7 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 			'secondary_association' => $activity->secondary_item_id,
 			'status'                => $activity->is_spam ? 'spam' : 'published',
 			'title'                 => $activity->action,
-			'type'                  => $activity->type,
+			'type'                  => activity_type_to_chinese($activity->type),
 		);
 
 		$context = ! empty( $request['context'] ) ? $request['context'] : 'view';
