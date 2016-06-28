@@ -1,6 +1,25 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once($_SERVER['CONTEXT_DOCUMENT_ROOT'].'/vendor/autoload.php');
+use WeDevs\ORM\Eloquent\Model;
 
+class UserActivityTagModel extends Model
+{
+
+    public function getTable()
+    {
+        return $this->getConnection()->db->prefix . 'user_activity_tag';
+    }
+}
+
+class FamilyActivityTagModel extends Model
+{
+
+    public function getTable()
+    {
+        return $this->getConnection()->db->prefix . 'family_activity_tag';
+    }
+}
 /**
  * Activity endpoints.
  *
@@ -97,43 +116,87 @@ class BP_REST_Activity_Types_Controller extends WP_REST_Controller {
 	 * @return WP_REST_Request List of activity object data.
 	 */
 	public function get_items( $request ) {
+		$retval = array();
+		$userDefaultTags = array(
+			array(
+				'type' => 'tag_zaji',
+				'name' => '杂记'
+			),
+			array(
+				'type' => 'tag_origin',
+				'name' => '原创'
+			),
+			array(
+				'type' => 'tag_food',
+				'name' => '美食'
+			),
+			array(
+				'type' => 'tag_trip',
+				'name' => '旅游'
+			),
+			array(
+				'type' => 'tag_finance',
+				'name' => '财务'
+			),
+			array(
+				'type' => 'tag_others',
+				'name' => '其他'
+			),
+		);
+
+		$familyDefaultTags = array(
+			array(
+				'type' => 'ft_tag_zaji',
+				'name' => '杂记'
+			),
+			array(
+				'type' => 'ft_tag_jucan',
+				'name' => '聚餐'
+			),
+			array(
+				'type' => 'ft_tag_trip',
+				'name' => '旅游'
+			),
+			array(
+				'type' => 'ft_tag_origin',
+				'name' => '原创'
+			),
+			array(
+				'type' => 'ft_tag_relatives',
+				'name' => '亲人'
+			),
+			array(
+				'type' => 'ft_tag_others',
+				'name' => '其他'
+			),
+		);	
+
 		if (isset($request['scope']) && $request['scope'] == 'group') {
-			// get the list of default group tags 
-			$retval = array(
-				array(
-					'type' => 'tag_zaji',
-					'name' => '杂记'
-				),
-			);	
+			$results = FamilyActivityTagModel::where('id', '=', bp_loggedin_user_id())->get();
+			if (count($results)) {
+				foreach($results->toArray() as $row) {
+					$retval[] = array(
+						'type' => $row['tag'],
+						'name' => e($row['tag'], 'cqg')
+					);
+				}
+			} else {
+				$retval = $familyDefaultTags;
+			}
 		} else {
-			$retval = array(
-				array(
-					'type' => 'tag_zaji',
-					'name' => '杂记'
-				),
-				array(
-					'type' => 'tag_origin',
-					'name' => '原创'
-				),
-				array(
-					'type' => 'tag_food',
-					'name' => '美食'
-				),
-				array(
-					'type' => 'tag_trip',
-					'name' => '旅游'
-				),
-				array(
-					'type' => 'tag_finance',
-					'name' => '财务'
-				),
-				array(
-					'type' => 'tag_others',
-					'name' => '其他'
-				),
-			);
+			$results = UserActivityTagModel::where('id', '=', bp_loggedin_user_id())->get();
+			if (count($results)) {
+				foreach($results->toArray() as $row) {
+					$retval[] = array(
+						'type' => $row['tag'],
+						'name' => e($row['tag'], 'cqg')
+					);
+				}
+			} else {
+				// default
+				$retval = $userDefaultTags;
+			}
 		}
-		
 		return rest_ensure_response( $retval );
 	}
 

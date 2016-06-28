@@ -341,7 +341,7 @@ class BP_REST_Activity_Controller extends WP_REST_Controller {
 		// @TODO: Verify and confirm this show_hidden logic, and check core for other edge cases.
 		if ( $request['component'] === 'groups' &&
 			(
-				groups_is_user_member( get_current_user_id(), $request['primary_id'] ) ||
+				groups_is_user_member( bp_loggedin_user_id(), $request['primary_id'] ) ||
 				bp_current_user_can( 'bp_moderate' )
 			)
 		) {
