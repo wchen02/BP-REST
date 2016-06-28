@@ -47,6 +47,9 @@ function bp_rest_api_endpoints() {
 		require_once( dirname( __FILE__ ) . '/includes/bp-activity/classes/class-bp-activity-endpoints.php' );
 		$controller = new BP_REST_Activity_Controller();
 		$controller->register_routes();
+        require_once( dirname( __FILE__ ) . '/includes/bp-activity/classes/class-bp-activity-types-endpoints.php' );
+        $controller = new BP_REST_Activity_Types_Controller();
+        $controller->register_routes();
 	}
 }
 add_action( 'rest_api_init', 'bp_rest_api_endpoints' );
